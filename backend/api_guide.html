@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Portal & API Docs — AI Image Detector</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            outfit: ['Outfit', 'sans-serif'],
+            mono: ['Fira Code', 'monospace'],
+          }
+        }
+      },
+      plugins: [
+        function({ addVariant }) {
+          addVariant('light', 'html.light &');
+        }
+      ]
+    }
+  </script>
+  <style>
+    /* Premium custom scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    html.dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 99px; }
+    html.light ::-webkit-scrollbar-thumb { background: rgba(15, 23, 42, 0.1); border-radius: 99px; }
+    html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+    html.light ::-webkit-scrollbar-thumb:hover { background: rgba(15, 23, 42, 0.2); }
+
+    /* Custom CSS tokens */
+    html.light body { background-color: #f8fafc; color: #0f172a; }
+    html.dark body { background-color: #030712; color: #cbd5e1; }
+    
+    html.light .glass-panel {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    html.dark .glass-panel {
+      background: #0f172a;
+      border-color: #1e293b;
+    }
+
+    .docs-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid;
+    }
+    html.light .docs-header { background: #ffffff; border-color: #e2e8f0; }
+    html.dark .docs-header { background: #030712; border-color: #1e293b; }
+
+    .copy-snippet {
+      position: relative;
+      border-radius: 0.75rem;
+      overflow: hidden;
+      border: 1px solid;
+    }
+    html.light .copy-snippet { border-color: #e2e8f0; background: #f8fafc; }
+    html.dark .copy-snippet { border-color: #1e293b; background: #0f1419; }
+
+    .copy-snippet pre.code-block {
+      margin: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      max-height: none !important;
+      box-shadow: none !important;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 1rem !important;
+      padding-top: 2.25rem !important;
+      background: transparent !important;
+    }
+
+    .copy-snippet-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      z-index: 2;
+      font-size: 10px;
+      padding: 0.25rem 0.625rem;
+      border-radius: 0.375rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    html.light .copy-snippet-btn {
+      background: #ffffff;
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+    html.light .copy-snippet-btn:hover {
+      background: #4f46e5;
+      border-color: #4f46e5;
+      color: #fff;
+    }
+    html.dark .copy-snippet-btn {
+      background: #1e293b;
+      border-color: #334155;
+      color: #94a3b8;
+    }
+    html.dark .copy-snippet-btn:hover {
+      background: #4f46e5;
+      border-color: #4f46e5;
+      color: #fff;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 0.75rem;
+      border: 1px solid;
+    }
+    html.light .table-scroll { border-color: #e2e8f0; }
+    html.dark .table-scroll { border-color: #1e293b; }
+
+    #docs-nav.docs-nav-open {
+      display: block;
+    }
+
+    @media (max-width: 1023px) {
+      #docs-nav {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 3.75rem;
+        bottom: 0;
+        width: min(18rem, 88vw);
+        z-index: 40;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+      }
+      #docs-nav.docs-nav-open {
+        display: block;
+      }
+      .docs-nav-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        top: 3.75rem;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 35;
+      }
+      .docs-nav-backdrop.show {
+        display: block;
+      }
+    }
+
+    /* Code explorer panel — fully theme-aware */
+    html.light .code-sidebar { background: #f8fafc; color: #1e293b; border-color: #e2e8f0; }
+    html.dark .code-sidebar { background: #0c1018; color: #e2e8f0; border-color: #1e293b; }
+
+    .code-tabs-header {
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 0.25rem;
+      border-bottom: 1px solid;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .code-tabs-header::-webkit-scrollbar { height: 4px; }
+    html.light .code-tabs-header { background: #f1f5f9; border-color: #e2e8f0; }
+    html.dark .code-tabs-header { background: #0a0e14; border-color: #1e293b; }
+
+    .code-content-area {
+      padding: 1.5rem;
+      padding-top: 2.25rem;
+      overflow-x: auto;
+      overflow-y: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 10.5px;
+      line-height: 1.65;
+      position: relative;
+      min-height: 10rem;
+      max-height: 22rem;
+    }
+    html.light .code-content-area { background: #ffffff; color: #1e293b; }
+    html.dark .code-content-area { background: #0f1419; color: #e2e8f0; }
+
+    .tab-btn {
+      font-size: 10px;
+      font-family: 'Fira Code', monospace;
+      padding: 0.375rem 0.625rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+    }
+    .tab-btn--inactive { }
+    html.light .tab-btn--inactive { background: #e2e8f0; color: #475569; }
+    html.light .tab-btn--inactive:hover { background: #cbd5e1; color: #1e293b; }
+    html.dark .tab-btn--inactive { background: #1e293b; color: #94a3b8; }
+    html.dark .tab-btn--inactive:hover { background: #334155; color: #f1f5f9; }
+    .tab-btn--active { background: #4f46e5 !important; color: #ffffff !important; }
+
+    .code-copy-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 10px;
+      padding: 0.25rem 0.625rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: 1px solid;
+    }
+    html.light .code-copy-btn { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+    html.light .code-copy-btn:hover { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+    html.dark .code-copy-btn { background: #1e293b; border-color: #334155; color: #94a3b8; }
+    html.dark .code-copy-btn:hover { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+
+    /* Syntax token colors */
+    html.light .tok-comment { color: #64748b; }
+    html.light .tok-cmd { color: #be185d; font-weight: 600; }
+    html.light .tok-kw { color: #6d28d9; }
+    html.light .tok-fn { color: #1d4ed8; }
+    html.light .tok-str { color: #047857; }
+    html.light .tok-num { color: #b45309; }
+    html.light .tok-tag { color: #0891b2; }
+    html.light .code-pane { color: #334155; }
+
+    html.dark .tok-comment { color: #94a3b8; }
+    html.dark .tok-cmd { color: #f472b6; font-weight: 600; }
+    html.dark .tok-kw { color: #c4b5fd; }
+    html.dark .tok-fn { color: #93c5fd; }
+    html.dark .tok-str { color: #6ee7b7; }
+    html.dark .tok-num { color: #fcd34d; }
+    html.dark .tok-tag { color: #67e8f9; }
+    html.dark .code-pane { color: #e2e8f0; }
+
+    html.light pre.code-block {
+      background: #f8fafc !important;
+      color: #334155 !important;
+      border: 1px solid #e2e8f0 !important;
+    }
+    html.dark pre.code-block {
+      background: #0f1419 !important;
+      color: #e2e8f0 !important;
+      border: 1px solid #1e293b !important;
+    }
+
+    html.light .devportal-accent {
+      background: linear-gradient(to right, #4f46e5, #7c3aed);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    html.light .glass-panel.feature-card {
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    }
+    html.light .glass-panel.feature-card span:first-child { color: #4f46e5; }
+
+    .code-explorer-host-mobile {
+      margin-bottom: 2rem;
+    }
+
+    .code-explorer-widget {
+      border-radius: 1rem;
+      border: 1px solid;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    html.light .code-explorer-widget { border-color: #e2e8f0; }
+    html.dark .code-explorer-widget { border-color: #1e293b; }
+
+    .code-mode-header {
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      border-bottom: 1px solid;
+    }
+    html.light .code-mode-header { background: #f8fafc; border-color: #e2e8f0; }
+    html.dark .code-mode-header { background: #0a0e14; border-color: #1e293b; }
+
+    .mode-btn {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 0.4rem 0.85rem;
+      border-radius: 0.5rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    html.light .mode-btn--inactive { background: #e2e8f0; color: #475569; }
+    html.dark .mode-btn--inactive { background: #1e293b; color: #94a3b8; }
+    .mode-btn--active { background: #4f46e5 !important; color: #fff !important; }
+
+    @media (min-width: 1280px) {
+      .code-explorer-host-desktop {
+        height: 100%;
+        overflow: hidden;
+      }
+      .code-explorer-widget {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .code-content-area {
+        flex: 1;
+        max-height: none;
+        min-height: 14rem;
+        overflow-y: auto;
+      }
+    }
+
+    /* Pane visibility — do not rely on Tailwind .hidden (breaks if JS fails to load) */
+    .code-content-area .code-pane {
+      display: none;
+    }
+    .code-content-area .code-pane.is-active {
+      display: block;
+    }
+
+    .code-pane pre,
+    .code-pane-json {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'Fira Code', monospace;
+      font-size: 10.5px;
+      line-height: 1.65;
+    }
+
+    .copy-toast {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      z-index: 100;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 12px;
+      font-weight: 600;
+      transition: transform 0.25s ease;
+      pointer-events: none;
+    }
+    .copy-toast.show { transform: translateX(-50%) translateY(0); }
+    html.light .copy-toast { background: #1e293b; color: #fff; }
+    html.dark .copy-toast { background: #e2e8f0; color: #0f172a; }
+
+    .glow-purple { text-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
+    .glow-indigo { text-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
+    html.light .glow-purple, html.light .glow-indigo { text-shadow: none; }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col lg:h-screen lg:overflow-hidden">
+  <!-- Top Navbar -->
+  <header class="docs-header py-3 px-4 sm:px-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center space-x-3">
+      <div class="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" strokeWidth="2.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-base font-outfit font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+          AI Detector <span class="devportal-accent bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">DevPortal</span>
+        </h1>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 order-3 sm:order-none w-full sm:w-auto sm:ml-auto">
+      <button type="button" id="navToggle" class="lg:hidden text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300" aria-expanded="false" aria-controls="docs-nav">
+        Menu
+      </button>
+      <a href="/" class="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-indigo-600 hover:text-white dark:hover:bg-indigo-600 text-slate-700 dark:text-slate-300 transition-colors flex items-center space-x-1.5 border border-slate-200 dark:border-slate-800 shrink-0">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        <span class="hidden xs:inline">Back</span>
+      </a>
+      <button id="themeToggle" type="button" aria-label="Toggle theme" class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-900 transition-colors shrink-0">
+        <svg id="moonIcon" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+        <svg id="sunIcon" class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:none">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="flex items-center relative w-full sm:w-72 sm:max-w-md order-4 sm:order-none">
+      <input type="text" id="docsSearch" placeholder="Search API Docs..." class="w-full pl-9 pr-4 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-900/30 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
+      <span class="absolute left-3 text-slate-400">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+      </span>
+    </div>
+
+  </header>
+
+  <div id="docs-nav-backdrop" class="docs-nav-backdrop" aria-hidden="true"></div>
+
+  <!-- Layout: scroll on mobile, split columns on desktop -->
+  <div class="flex-1 flex flex-col lg:flex-row lg:overflow-hidden min-h-0">
+    
+  <nav id="docs-nav" class="hidden lg:block w-64 border-r border-slate-200 dark:border-slate-800 glass-panel overflow-y-auto p-6 flex-shrink-0">
+      <div class="space-y-6">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Getting Started</span>
+          <div class="space-y-2 flex flex-col">
+            <a href="#intro" class="text-xs font-semibold text-indigo-500 hover:text-indigo-600">1. Introduction</a>
+            <a href="#features" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Key Features</a>
+            <a href="#auth" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Authentication</a>
+            <a href="#quickstart" class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200">2. Quick Start Guide</a>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">API References</span>
+          <div class="space-y-2 flex flex-col">
+            <a href="#endpoints" class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200">3. Endpoints</a>
+            <a href="#endpoint-analyze" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3 flex items-center space-x-1.5"><span class="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold px-1 rounded">POST</span><span>/api/v2/analyze</span></a>
+            <a href="#endpoint-jobs" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3 flex items-center space-x-1.5"><span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-bold px-1 rounded">GET</span><span>/api/v2/jobs/{id}</span></a>
+            <a href="#endpoint-legacy" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3 flex items-center space-x-1.5"><span class="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold px-1 rounded">POST</span><span>/api/analyze</span></a>
+            <a href="#schemas" class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200">4. Response Schemas</a>
+            <a href="#versioning" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">API Versioning</a>
+            <a href="#rate-limits" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Rate Limiting</a>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Integrations</span>
+          <div class="space-y-2 flex flex-col">
+            <a href="#sdks" class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200">5. SDK & Code Examples</a>
+            <a href="#sdk-install" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Installation</a>
+            <a href="#sdk-auth" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Authentication</a>
+            <a href="#sdk-upload" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Upload & Results</a>
+            <a href="#sdk-errors" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Error Handling</a>
+            <a href="#limits" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Rate Limits</a>
+            <a href="#best-practices" class="text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 pl-3">Best Practices</a>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Additional Info</span>
+          <div class="space-y-2 flex flex-col">
+            <a href="#faq" class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200">6. FAQ</a>
+            <a href="#changelog" class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200">7. Changelog</a>
+            <a href="#security" class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200">8. Security & Webhooks</a>
+            <a href="#terms" class="text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-200">9. Terms of Service</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content Panel (Left/Center Column) -->
+    <main class="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-8 sm:py-10 lg:px-12 space-y-12 sm:space-y-16 min-w-0">
+      
+      <!-- 1. Introduction Section -->
+      <section id="intro" class="space-y-6">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">1. Introduction</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          Welcome to the **AI Image Detector Developer Portal**. Our multi-signal forensic analysis API provides enterprise-grade detection capabilities, enabling developers to identify AI-generated and deepfake media at scale. 
+          By combining pixel-level forensics with state-of-the-art vision models, it remains robust against common platform modifications, including metadata removal, recompression, resizing, and screenshots (typical of sharing on Telegram, WhatsApp, Instagram, or Facebook).
+        </p>
+
+        <div id="features" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div class="glass-panel feature-card p-4 rounded-xl border flex flex-col space-y-1.5 shadow-sm">
+            <span class="text-xs font-bold text-indigo-500 uppercase tracking-wide">Dual-Path Classification</span>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Parallel pipelines to detect fully AI-generated images (Midjourney, DALL-E, Flux) and face manipulations (deepfakes).</p>
+          </div>
+          <div class="glass-panel feature-card p-4 rounded-xl border flex flex-col space-y-1.5 shadow-sm">
+            <span class="text-xs font-bold text-indigo-500 uppercase tracking-wide">Compression Robustness</span>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Adaptive weights automatically shift from metadata to semantic features (CLIP/ViT) when social media sharing strips headers.</p>
+          </div>
+          <div class="glass-panel feature-card p-4 rounded-xl border flex flex-col space-y-1.5 shadow-sm">
+            <span class="text-xs font-bold text-indigo-500 uppercase tracking-wide">Granular Breakdown</span>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Returns ELA compression, fast Fourier transforms (FFT), LBP texture anomalies, and camera authenticities.</p>
+          </div>
+          <div class="glass-panel feature-card p-4 rounded-xl border flex flex-col space-y-1.5 shadow-sm">
+            <span class="text-xs font-bold text-indigo-500 uppercase tracking-wide">Asynchronous Processing</span>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Support for background jobs on large or high-resolution images to prevent standard HTTP timeouts.</p>
+          </div>
+        </div>
+
+        <div id="auth" class="bg-indigo-500/5 rounded-xl border border-indigo-500/10 p-5 mt-6 space-y-3">
+          <h3 class="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+            <span>Authentication</span>
+          </h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            All requests must be authenticated using an API Key. Include your key in the request headers:
+          </p>
+          <pre class="code-block font-mono text-[10px] p-3 rounded-lg overflow-x-auto">X-API-Key: your_secure_api_key_here</pre>
+        </div>
+      </section>
+
+      <!-- 2. Quick Start Section -->
+      <section id="quickstart" class="space-y-6">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">2. Quick Start Guide</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          Integrate AI detection into your application in three simple steps:
+        </p>
+        <ol class="list-decimal pl-5 space-y-2 text-xs text-slate-600 dark:text-slate-400">
+          <li><strong>Obtain your API Key</strong> from your developer portal dashboard.</li>
+          <li><strong>Make a POST request</strong> to the `/api/v2/analyze` endpoint with the image file in `multipart/form-data`.</li>
+          <li><strong>Process the JSON verdict</strong> to automatically tag, moderate, or alert your backend logic.</li>
+        </ol>
+        <div class="mt-4">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">cURL Example Request</span>
+          <pre class="code-block font-mono text-[10px] p-3 rounded-lg overflow-x-auto">curl -X POST "http://localhost:8000/api/v2/analyze" \
+  -H "X-API-Key: your_secure_api_key_here" \
+  -F "file=@sample_image.jpg"</pre>
+        </div>
+
+        <!-- Mobile / tablet: interactive code explorer (moved here on small screens) -->
+        <div id="code-explorer-mobile" class="code-explorer-host-mobile xl:hidden mt-8" aria-label="Code examples"></div>
+      </section>
+
+      <!-- 3. Endpoints Section -->
+      <section id="endpoints" class="space-y-8">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">3. API Endpoints</h2>
+
+        <!-- Endpoint Analyze -->
+        <div id="endpoint-analyze" class="space-y-4">
+          <div class="flex items-center space-x-2 flex-wrap gap-2">
+            <span class="bg-indigo-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg">POST</span>
+            <span class="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">/api/v2/analyze</span>
+            <span class="text-xs text-slate-500">Core Image Forensics Engine</span>
+          </div>
+
+          <p class="text-xs text-slate-600 dark:text-slate-400">
+            Submit a JPG, PNG, or WEBP image to run a full multi-layer analysis.
+          </p>
+
+          <div class="table-scroll">
+          <table class="w-full min-w-[32rem] text-left text-xs border-collapse border border-slate-200 dark:border-slate-800">
+            <thead>
+              <tr class="bg-slate-100 dark:bg-slate-900 text-slate-500 font-bold border-b border-slate-200 dark:border-slate-800">
+                <th class="p-3">Parameter</th>
+                <th class="p-3">Type</th>
+                <th class="p-3">Required</th>
+                <th class="p-3">Description</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-600 dark:text-slate-400">
+              <tr>
+                <td class="p-3 font-mono font-semibold">file</td>
+                <td class="p-3">Binary</td>
+                <td class="p-3 text-red-500 font-semibold">Yes</td>
+                <td class="p-3">Multi-part form field containing raw image binary.</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-mono font-semibold">async_mode</td>
+                <td class="p-3">Query Bool</td>
+                <td class="p-3">No</td>
+                <td class="p-3">Instantly return `job_id` and process in background.</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
+        </div>
+
+        <!-- Endpoint Jobs -->
+        <div id="endpoint-jobs" class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center space-x-2 flex-wrap gap-2">
+            <span class="bg-emerald-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg">GET</span>
+            <span class="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">/api/v2/jobs/{job_id}</span>
+            <span class="text-xs text-slate-500">Poll Async Background Job</span>
+          </div>
+
+          <p class="text-xs text-slate-600 dark:text-slate-400">
+            Poll the state of a large background file execution. Returns completed standard payload or a processing state.
+          </p>
+
+          <div class="table-scroll mt-3">
+          <table class="w-full min-w-[28rem] text-left text-xs border-collapse border border-slate-200 dark:border-slate-800">
+            <thead>
+              <tr class="bg-slate-100 dark:bg-slate-900 text-slate-500 font-bold border-b border-slate-200 dark:border-slate-800">
+                <th class="p-3">Header</th><th class="p-3">Required</th><th class="p-3">Description</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-slate-600 dark:text-slate-400">
+              <tr><td class="p-3 font-mono">X-API-Key</td><td class="p-3">Recommended</td><td class="p-3">API key for production deployments.</td></tr>
+            </tbody>
+          </table>
+          </div>
+
+          <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 mt-4">Status Codes</h4>
+          <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-5 space-y-1">
+            <li><strong>200</strong> — Analysis completed successfully.</li>
+            <li><strong>202</strong> — Job accepted (when <code class="font-mono">async_mode=true</code>).</li>
+            <li><strong>400</strong> — Invalid file type or payload.</li>
+            <li><strong>401</strong> — Missing or invalid API key.</li>
+            <li><strong>413</strong> — File exceeds 10MB limit.</li>
+            <li><strong>500</strong> — Internal analysis failure.</li>
+          </ul>
+        </div>
+
+        <div id="endpoint-legacy" class="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div class="flex items-center space-x-2 flex-wrap gap-2">
+            <span class="bg-indigo-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg">POST</span>
+            <span class="font-mono text-sm font-bold text-slate-800 dark:text-slate-200">/api/analyze</span>
+            <span class="text-xs text-slate-500">Legacy v1-compatible response</span>
+          </div>
+          <p class="text-xs text-slate-600 dark:text-slate-400">
+            Same engine as v2; returns simplified <code class="font-mono">is_ai_generated</code>, <code class="font-mono">confidence</code>, and <code class="font-mono">signals</code> for older integrations.
+          </p>
+        </div>
+      </section>
+
+      <!-- SDK Section -->
+      <section id="sdks" class="space-y-8">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">5. SDK Usage & Integration</h2>
+
+        <div id="sdk-install" class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Installation</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Use any HTTP client. Optional Python helper:</p>
+          <pre class="code-block font-mono text-[10px] p-3 rounded-lg">pip install requests</pre>
+        </div>
+
+        <div id="sdk-auth" class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Authentication</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Set <code class="font-mono">X-API-Key</code> on every request. Local development may run without a key; production should enforce keys via your API gateway.</p>
+        </div>
+
+        <div id="sdk-upload" class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Uploading Images & Reading Results</h3>
+          <ol class="list-decimal pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-2">
+            <li>POST multipart <code class="font-mono">file</code> to <code class="font-mono">/api/v2/analyze</code>.</li>
+            <li>Read <code class="font-mono">verdict</code>: <code class="font-mono">AI_GENERATED</code>, <code class="font-mono">DEEPFAKE</code>, or <code class="font-mono">AUTHENTIC</code>.</li>
+            <li>Use <code class="font-mono">dual_detection.ai_generated.score</code> and <code class="font-mono">dual_detection.deepfake.score</code> for parallel GenAI vs face-manipulation signals.</li>
+            <li>Check <code class="font-mono">analysis_context.messenger_shared</code> when the image was likely re-compressed by Telegram/WhatsApp.</li>
+            <li>Use <code class="font-mono">breakdown.compression_robust_score</code> for spectral forensic confidence after social sharing.</li>
+          </ol>
+        </div>
+
+        <div id="sdk-errors" class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Error Handling</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Retry 5xx with exponential backoff. Do not retry 4xx except 429 (rate limit). Parse <code class="font-mono">detail</code> from FastAPI error bodies.</p>
+        </div>
+
+        <div id="rate-limits" class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Rate Limiting</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Default: <strong>60 requests/minute</strong> per API key (configurable on enterprise plans). Response headers: <code class="font-mono">X-RateLimit-Limit</code>, <code class="font-mono">X-RateLimit-Remaining</code>, <code class="font-mono">Retry-After</code> on 429.</p>
+        </div>
+
+        <div id="versioning" class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">API Versioning</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Current stable: <strong>v2</strong> (<code class="font-mono">/api/v2/*</code>). Legacy <code class="font-mono">/api/analyze</code> remains supported and maps to v2 internally. Breaking changes increment the path version only.</p>
+        </div>
+
+        <div id="best-practices" class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Best Practices</h3>
+          <ul class="text-xs text-slate-600 dark:text-slate-400 list-disc pl-5 space-y-2">
+            <li>Send the <strong>highest quality</strong> copy available; avoid re-saving PNG→JPEG→PNG chains.</li>
+            <li>For Telegram/WhatsApp workflows, analyze the <strong>downloaded file</strong> as users receive it.</li>
+            <li>Use <code class="font-mono">async_mode=true</code> for images above 4MP or batch moderation pipelines.</li>
+            <li>Combine GenAI + deepfake scores when moderating user avatars vs full-scene synthetic art.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 4. Response Schemas Section -->
+      <section id="schemas" class="space-y-6">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">4. Response Schemas</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          Each example includes a <strong class="text-slate-800 dark:text-slate-200">Copy</strong> button (top-right of the block).
+          For live request samples in multiple languages, use the interactive panel under <a href="#quickstart" class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">Quick Start</a> (mobile) or the right sidebar (desktop) — switch <strong>Request</strong> / <strong>Response</strong> there.
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide block">Success Response JSON (200)</span>
+            <div class="copy-snippet">
+              <button type="button" class="copy-snippet-btn" onclick="copySnippet(this)">Copy</button>
+              <pre class="code-block font-mono text-[10px]">{
+  "verdict": "AI_GENERATED",
+  "confidence": 87.4,
+  "synthetic_likelihood": 87.4,
+  "authentic_likelihood": 12.6,
+  "dual_detection": {
+    "ai_generated": { "score": 87.2, "likely_fake": true },
+    "deepfake": { "score": 14.1, "likely_fake": false, "face_count": 1 }
+  },
+  "breakdown": {
+    "hf_ai_score": 82.1,
+    "clip_ai_score": 76.4,
+    "pixel_forensics_score": 45.2
+  },
+  "explanation": "Strong semantic AI signals with compression-robust fusion."
+}</pre>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <span class="text-xs font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wide block">Error Response JSON (4xx)</span>
+            <div class="copy-snippet">
+              <button type="button" class="copy-snippet-btn" onclick="copySnippet(this)">Copy</button>
+              <pre class="code-block font-mono text-[10px]">{
+  "detail": "Invalid or missing X-API-Key header."
+}</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. FAQ Section -->
+      <section id="faq" class="space-y-6">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">6. Frequently Asked Questions</h2>
+        <div class="space-y-4">
+          <div class="glass-panel p-5 rounded-xl border shadow-sm space-y-2">
+            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">How does the API handle messaging compressed JPEGs from Telegram/WhatsApp?</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              When an image is shared via messaging apps, EXIF and C2PA are stripped and JPEG is re-quantized. The API enters messenger context, runs compression-robust spectral forensics plus multi-branch HF inference (including synthetic re-JPEG test views), and fuses scores without over-penalizing when semantic models alone read as "real."
+            </p>
+          </div>
+          <div class="glass-panel p-5 rounded-xl border shadow-sm space-y-2">
+            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">Are my images saved on your servers?</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              No. Uploaded images are processed strictly in-memory during analysis and are immediately deleted afterwards. No media binaries are stored or used to retrain models without explicit enterprise opt-in.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Changelog Section -->
+      <section id="changelog" class="space-y-6">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">7. Changelog</h2>
+        <div class="space-y-4 text-xs">
+          <div class="flex items-start space-x-3">
+            <span class="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold px-2 py-0.5 rounded">v2.1.0</span>
+            <div>
+              <p class="font-bold text-slate-800 dark:text-slate-100">Compression-robust messenger detection</p>
+              <p class="text-slate-500 dark:text-slate-400 mt-1">Diffusion spectral forensics, HF multi-branch JPEG TTA, fixed messenger fusion dampening, and improved attribution for full-scene GenAI vs face-swap.</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <span class="bg-indigo-500/10 text-indigo-400 font-bold px-2 py-0.5 rounded">v2.0.0</span>
+            <div>
+              <p class="font-bold text-slate-800 dark:text-slate-100">Release — Stable Platt Calibration & Dual Scores</p>
+              <p class="text-slate-500 dark:text-slate-400 mt-1">Added CLIP multi-prompt zero-shot classification, Haarcascade face forensics, synchronous/asynchronous task pipelines, and dynamic messenger weights.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="security" class="space-y-6">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">8. Security & Webhooks</h2>
+        <div class="glass-panel p-5 rounded-xl border space-y-3">
+          <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">Security Recommendations</h4>
+          <ul class="text-xs text-slate-500 dark:text-slate-400 list-disc pl-5 space-y-1">
+            <li>Rotate API keys quarterly; never embed keys in client-side JavaScript.</li>
+            <li>Terminate TLS at your edge; use HTTPS only in production.</li>
+            <li>Images are processed in-memory and not retained by default.</li>
+          </ul>
+          <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-4">Webhooks (Enterprise)</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Optional <code class="font-mono">callback_url</code> on async jobs delivers a signed POST when analysis completes. Verify <code class="font-mono">X-Signature-Hmac-Sha256</code> with your webhook secret.</p>
+        </div>
+      </section>
+
+      <section id="terms" class="space-y-6">
+        <h2 class="text-3xl font-outfit font-extrabold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">9. Terms of Service</h2>
+        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+          Detection scores are probabilistic forensic estimates, not legal proof. Use human review for high-stakes decisions. By using the API you agree to acceptable-use policies prohibiting harassment, non-consensual imagery, and unlawful surveillance.
+        </p>
+      </section>
+    </main>
+
+    <!-- Desktop sidebar: code explorer lives here by default (moved to mobile host on smaller screens) -->
+    <div id="code-explorer-desktop" class="code-explorer-host-desktop hidden xl:block w-full xl:w-[480px] flex-shrink-0 xl:border-l border-slate-200 dark:border-slate-800 p-4 xl:p-0 xl:pt-4">
+  <div id="code-explorer" class="code-explorer-widget code-sidebar w-full">
+      <div class="code-mode-header">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-1">Examples</span>
+        <button type="button" id="mode-request" onclick="switchMode('request')" class="mode-btn mode-btn--active">Request</button>
+        <button type="button" id="mode-response" onclick="switchMode('response')" class="mode-btn mode-btn--inactive">Response</button>
+      </div>
+
+      <div id="lang-tabs-row" class="code-tabs-header">
+        <button type="button" onclick="switchTab('curl')" id="tab-curl" class="tab-btn tab-btn--active shrink-0">cURL</button>
+        <button type="button" onclick="switchTab('js')" id="tab-js" class="tab-btn tab-btn--inactive shrink-0">JS</button>
+        <button type="button" onclick="switchTab('node')" id="tab-node" class="tab-btn tab-btn--inactive shrink-0">Node.js</button>
+        <button type="button" onclick="switchTab('py')" id="tab-py" class="tab-btn tab-btn--inactive shrink-0">Python</button>
+        <button type="button" onclick="switchTab('php')" id="tab-php" class="tab-btn tab-btn--inactive shrink-0">PHP</button>
+        <button type="button" onclick="switchTab('go')" id="tab-go" class="tab-btn tab-btn--inactive shrink-0">Go</button>
+        <button type="button" onclick="switchTab('java')" id="tab-java" class="tab-btn tab-btn--inactive shrink-0">Java</button>
+        <button type="button" onclick="switchTab('csharp')" id="tab-csharp" class="tab-btn tab-btn--inactive shrink-0">C#</button>
+        <button type="button" onclick="switchTab('ruby')" id="tab-ruby" class="tab-btn tab-btn--inactive shrink-0">Ruby</button>
+      </div>
+
+      <div id="response-tabs-row" class="code-tabs-header hidden">
+        <button type="button" onclick="switchResponseTab('success')" id="tab-res-success" class="tab-btn tab-btn--active shrink-0">Success 200</button>
+        <button type="button" onclick="switchResponseTab('error')" id="tab-res-error" class="tab-btn tab-btn--inactive shrink-0">Error 4xx</button>
+        <button type="button" onclick="switchResponseTab('async')" id="tab-res-async" class="tab-btn tab-btn--inactive shrink-0">Async 202</button>
+      </div>
+
+      <div class="code-content-area">
+        <button type="button" onclick="copyCode()" class="code-copy-btn" id="code-copy-btn">Copy</button>
+
+        <!-- cURL Pane -->
+        <div id="pane-curl" class="code-pane is-active">
+          <span class="tok-comment block mb-2">// cURL simple terminal post request</span>
+          <span class="tok-cmd">curl</span> -X POST <span class="tok-str">"http://localhost:8000/api/v2/analyze"</span> \<br>
+          &nbsp;&nbsp;-H <span class="tok-str">"X-API-Key: your_secure_api_key"</span> \<br>
+          &nbsp;&nbsp;-F <span class="tok-str">"file=@sample.jpg"</span>
+        </div>
+
+        <!-- JS Pane -->
+        <div id="pane-js" class="code-pane">
+          <span class="tok-comment block mb-2">// Fetch implementation for browsers</span>
+          <span class="tok-kw">async function</span> <span class="tok-fn">analyze</span>(fileObject) {<br>
+          &nbsp;&nbsp;<span class="tok-kw">const</span> formData = <span class="tok-kw">new</span> <span class="tok-fn">FormData</span>();<br>
+          &nbsp;&nbsp;formData.append(<span class="tok-str">"file"</span>, fileObject);<br><br>
+          &nbsp;&nbsp;<span class="tok-kw">const</span> response = <span class="tok-kw">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">"/api/v2/analyze"</span>, {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;method: <span class="tok-str">"POST"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;headers: { <span class="tok-str">"X-API-Key"</span>: <span class="tok-str">"your_api_key"</span> },<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;body: formData<br>
+          &nbsp;&nbsp;});<br><br>
+          &nbsp;&nbsp;<span class="tok-kw">return</span> <span class="tok-kw">await</span> response.json();<br>
+          }
+        </div>
+
+        <!-- Node Pane -->
+        <div id="pane-node" class="code-pane">
+          <span class="tok-comment block mb-2">// Node.js using Axios</span>
+          <span class="tok-kw">const</span> axios = <span class="tok-fn">require</span>(<span class="tok-str">'axios'</span>);<br>
+          <span class="tok-kw">const</span> FormData = <span class="tok-fn">require</span>(<span class="tok-str">'form-data'</span>);<br>
+          <span class="tok-kw">const</span> fs = <span class="tok-fn">require</span>(<span class="tok-str">'fs'</span>);<br><br>
+          <span class="tok-kw">const</span> form = <span class="tok-kw">new</span> <span class="tok-fn">FormData</span>();<br>
+          form.append(<span class="tok-str">'file'</span>, fs.createReadStream(<span class="tok-str">'./image.jpg'</span>));<br><br>
+          axios.post(<span class="tok-str">'/api/v2/analyze'</span>, form, {<br>
+          &nbsp;&nbsp;headers: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;...form.getHeaders(),<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="tok-str">'X-API-Key'</span>: <span class="tok-str">'your_api_key'</span><br>
+          &nbsp;&nbsp;},<br>
+          &nbsp;&nbsp;timeout: <span class="tok-num">120000</span><br>
+          }).then(r => console.log(r.data));
+        </div>
+
+        <!-- Python Pane -->
+        <div id="pane-py" class="code-pane">
+          <span class="tok-comment block mb-2"># Python requests wrapper</span>
+          <span class="tok-kw">import</span> requests<br><br>
+          <span class="tok-kw">def</span> <span class="tok-fn">scan_image</span>(path, api_key):<br>
+          &nbsp;&nbsp;url = <span class="tok-str">"http://localhost:8000/api/v2/analyze"</span><br>
+          &nbsp;&nbsp;headers = {<span class="tok-str">"X-API-Key"</span>: api_key}<br>
+          &nbsp;&nbsp;<span class="tok-kw">with</span> <span class="tok-fn">open</span>(path, <span class="tok-str">"rb"</span>) <span class="tok-kw">as</span> f:<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;files = {<span class="tok-str">"file"</span>: (path, f, <span class="tok-str">"image/jpeg"</span>)}<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;r = requests.post(url, headers=headers, files=files, timeout=<span class="tok-num">120</span>)<br>
+          &nbsp;&nbsp;<span class="tok-kw">return</span> r.json()
+        </div>
+
+        <!-- PHP Pane -->
+        <div id="pane-php" class="code-pane">
+          <span class="tok-comment block mb-2">// PHP file post upload</span>
+          <span class="tok-tag">&lt;?php</span><br>
+          $ch = curl_init(<span class="tok-str">"http://localhost:8000/api/v2/analyze"</span>);<br>
+          $file = <span class="tok-kw">new</span> CURLFile(<span class="tok-str">"image.jpg"</span>, <span class="tok-str">"image/jpeg"</span>);<br>
+          curl_setopt_array($ch, [<br>
+          &nbsp;&nbsp;CURLOPT_POST => <span class="tok-kw">true</span>,<br>
+          &nbsp;&nbsp;CURLOPT_POSTFIELDS => [<span class="tok-str">"file"</span> => $file],<br>
+          &nbsp;&nbsp;CURLOPT_RETURNTRANSFER => <span class="tok-kw">true</span>,<br>
+          &nbsp;&nbsp;CURLOPT_HTTPHEADER => [<span class="tok-str">"X-API-Key: your_key"</span>]<br>
+          ]);<br>
+          $res = curl_exec($ch);<br>
+          <span class="tok-tag">?&gt;</span>
+        </div>
+
+        <!-- Go Pane -->
+        <div id="pane-go" class="code-pane">
+          <span class="tok-comment block mb-2">// Go net/http implementation</span>
+          <span class="tok-kw">package</span> main<br><br>
+          <span class="tok-kw">import</span> (<br>
+          &nbsp;&nbsp;<span class="tok-str">"bytes"</span><br>
+          &nbsp;&nbsp;<span class="tok-str">"mime/multipart"</span><br>
+          &nbsp;&nbsp;<span class="tok-str">"net/http"</span><br>
+          &nbsp;&nbsp;<span class="tok-str">"os"</span><br>
+          )<br><br>
+          <span class="tok-kw">func</span> <span class="tok-fn">send</span>(path string, key string) {<br>
+          &nbsp;&nbsp;body := &amp;bytes.Buffer{}<br>
+          &nbsp;&nbsp;writer := multipart.NewWriter(body)<br>
+          &nbsp;&nbsp;part, _ := writer.CreateFormFile(<span class="tok-str">"file"</span>, path)<br>
+          &nbsp;&nbsp;file, _ := os.Open(path)<br>
+          &nbsp;&nbsp;io.Copy(part, file)<br>
+          &nbsp;&nbsp;writer.Close()<br><br>
+          &nbsp;&nbsp;req, _ := http.NewRequest(<span class="tok-str">"POST"</span>, <span class="tok-str">"/api/v2/analyze"</span>, body)<br>
+          &nbsp;&nbsp;req.Header.Set(<span class="tok-str">"X-API-Key"</span>, key)<br>
+          &nbsp;&nbsp;req.Header.Set(<span class="tok-str">"Content-Type"</span>, writer.FormDataContentType())<br>
+          &nbsp;&nbsp;http.DefaultClient.Do(req)<br>
+          }
+        </div>
+
+        <div id="pane-java" class="code-pane">
+          <span class="tok-comment block mb-2">// Java 11+ HttpClient</span>
+          HttpClient client = HttpClient.newHttpClient();<br>
+          MultipartBodyPublisher body = MultipartBodyPublisher.newBuilder()<br>
+          &nbsp;&nbsp;.filePart("file", Path.of("image.jpg"), MediaType.IMAGE_JPEG)<br>
+          &nbsp;&nbsp;.build();<br>
+          HttpRequest req = HttpRequest.newBuilder()<br>
+          &nbsp;&nbsp;.uri(URI.create("http://localhost:8000/api/v2/analyze"))<br>
+          &nbsp;&nbsp;.header("X-API-Key", apiKey)<br>
+          &nbsp;&nbsp;.POST(body).build();<br>
+          HttpResponse&lt;String&gt; res = client.send(req, BodyHandlers.ofString());
+        </div>
+
+        <div id="pane-csharp" class="code-pane">
+          <span class="tok-comment block mb-2">// C# HttpClient</span>
+          using var client = new HttpClient();<br>
+          client.DefaultRequestHeaders.Add("X-API-Key", apiKey);<br>
+          using var form = new MultipartFormDataContent();<br>
+          form.Add(new ByteArrayContent(bytes), "file", "image.jpg");<br>
+          var res = await client.PostAsync(baseUrl + "/api/v2/analyze", form);<br>
+          var json = await res.Content.ReadAsStringAsync();
+        </div>
+
+        <div id="pane-ruby" class="code-pane">
+          <span class="tok-comment block mb-2"># Ruby Net::HTTP</span>
+          require 'net/http'<br>
+          uri = URI('http://localhost:8000/api/v2/analyze')<br>
+          req = Net::HTTP::Post.new(uri)<br>
+          req['X-API-Key'] = api_key<br>
+          form = [['file', File.open('image.jpg')]]<br>
+          req.set_form form, 'multipart/form-data'<br>
+          res = Net::HTTP.start(uri.hostname, uri.port) { |h| h.request(req) }
+        </div>
+
+        <!-- API response examples (copyable) -->
+        <div id="pane-response-success" class="code-pane response-pane">
+          <span class="tok-comment block mb-2">// HTTP 200 — POST /api/v2/analyze</span>
+          <pre class="code-pane-json">{
+  "verdict": "AI_GENERATED",
+  "confidence": 87.4,
+  "synthetic_likelihood": 87.4,
+  "authentic_likelihood": 12.6,
+  "dual_detection": {
+    "ai_generated": { "score": 87.2, "likely_fake": true },
+    "deepfake": { "score": 14.1, "likely_fake": false, "face_count": 1 },
+    "primary": "ai_generated"
+  },
+  "breakdown": {
+    "hf_ai_score": 82.1,
+    "clip_ai_score": 76.4,
+    "pixel_forensics_score": 45.2,
+    "deepfake_score": 14.1
+  },
+  "analysis_context": {
+    "messenger_shared": false,
+    "metadata_stripped": false,
+    "analysis_mode": "standard"
+  },
+  "explanation": "Strong semantic AI signals with compression-robust fusion.",
+  "heatmap_base64": "…",
+  "fft_base64": "…"
+}</pre>
+        </div>
+
+        <div id="pane-response-error" class="code-pane response-pane">
+          <span class="tok-comment block mb-2">// HTTP 401 / 400 / 413</span>
+          <pre class="code-pane-json">{
+  "detail": "Invalid or missing X-API-Key header."
+}</pre>
+        </div>
+
+        <div id="pane-response-async" class="code-pane response-pane">
+          <span class="tok-comment block mb-2">// HTTP 202 — async_mode=true</span>
+          <pre class="code-pane-json">{
+  "job_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "pending",
+  "poll_url": "/api/v2/jobs/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}</pre>
+        </div>
+      </div>
+  </div>
+    </div>
+  </div>
+
+  <div id="copy-toast" class="copy-toast" role="status" aria-live="polite">Copied to clipboard</div>
+
+  <!-- Interactive Logic Script -->
+  <script>
+    // Theme logic (synced with main app: ai-detector-theme)
+    const THEME_KEY = "ai-detector-theme";
+    const themeToggle = document.getElementById("themeToggle");
+    const htmlEl = document.documentElement;
+    const moonIcon = document.getElementById("moonIcon");
+    const sunIcon = document.getElementById("sunIcon");
+
+    function applyTheme(mode) {
+      const isDark = mode === "dark";
+      htmlEl.classList.remove("dark", "light");
+      htmlEl.classList.add(isDark ? "dark" : "light");
+      if (moonIcon) moonIcon.style.display = isDark ? "block" : "none";
+      if (sunIcon) sunIcon.style.display = isDark ? "none" : "block";
+      localStorage.setItem(THEME_KEY, mode);
+    }
+
+    const legacy = localStorage.getItem("theme");
+    const savedTheme = localStorage.getItem(THEME_KEY) || legacy || "dark";
+    applyTheme(savedTheme === "light" ? "light" : "dark");
+
+    if (themeToggle) {
+      themeToggle.addEventListener("click", () => {
+        const next = htmlEl.classList.contains("dark") ? "light" : "dark";
+        applyTheme(next);
+      });
+    }
+
+    // Place code explorer in mobile or desktop host
+    const codeExplorer = document.getElementById("code-explorer");
+    const mobileHost = document.getElementById("code-explorer-mobile");
+    const desktopHost = document.getElementById("code-explorer-desktop");
+
+    function placeCodeExplorer() {
+      if (!codeExplorer || !mobileHost || !desktopHost) return;
+      const onDesktop = window.matchMedia("(min-width: 1280px)").matches;
+      const target = onDesktop ? desktopHost : mobileHost;
+      if (codeExplorer.parentElement !== target) {
+        target.appendChild(codeExplorer);
+      }
+    }
+
+    window.addEventListener("resize", placeCodeExplorer);
+
+    // Request / Response modes
+    let activeMode = "request";
+    let activeTab = "curl";
+    let activeResponseTab = "success";
+
+    function switchMode(mode) {
+      activeMode = mode;
+      document.getElementById("mode-request").classList.toggle("mode-btn--active", mode === "request");
+      document.getElementById("mode-request").classList.toggle("mode-btn--inactive", mode !== "request");
+      document.getElementById("mode-response").classList.toggle("mode-btn--active", mode === "response");
+      document.getElementById("mode-response").classList.toggle("mode-btn--inactive", mode !== "response");
+      document.getElementById("lang-tabs-row").classList.toggle("hidden", mode !== "request");
+      document.getElementById("response-tabs-row").classList.toggle("hidden", mode !== "response");
+      if (mode === "request") switchTab(activeTab);
+      else switchResponseTab(activeResponseTab);
+    }
+
+    function setActivePane(paneId) {
+      document.querySelectorAll(".code-content-area .code-pane").forEach((pane) => {
+        pane.classList.toggle("is-active", pane.id === paneId);
+      });
+    }
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+      document.querySelectorAll("#lang-tabs-row .tab-btn").forEach(btn => {
+        btn.classList.remove("tab-btn--active");
+        btn.classList.add("tab-btn--inactive");
+      });
+
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove("tab-btn--inactive");
+        activeBtn.classList.add("tab-btn--active");
+      }
+
+      setActivePane(`pane-${tabId}`);
+    }
+
+    function switchResponseTab(tabId) {
+      activeResponseTab = tabId;
+      document.querySelectorAll("#response-tabs-row .tab-btn").forEach(btn => {
+        btn.classList.remove("tab-btn--active");
+        btn.classList.add("tab-btn--inactive");
+      });
+
+      const activeBtn = document.getElementById(`tab-res-${tabId}`);
+      if (activeBtn) {
+        activeBtn.classList.remove("tab-btn--inactive");
+        activeBtn.classList.add("tab-btn--active");
+      }
+
+      setActivePane(`pane-response-${tabId}`);
+    }
+
+    function showCopyToast() {
+      const toast = document.getElementById("copy-toast");
+      if (!toast) return;
+      toast.classList.add("show");
+      window.setTimeout(() => toast.classList.remove("show"), 2000);
+    }
+
+    function copyCode() {
+      let pane;
+      if (activeMode === "response") {
+        pane = document.getElementById(`pane-response-${activeResponseTab}`);
+      } else {
+        pane = document.getElementById(`pane-${activeTab}`);
+      }
+      if (!pane) return;
+      const text = pane.innerText || pane.textContent;
+      navigator.clipboard.writeText(text.trim()).then(showCopyToast).catch(err => {
+        console.error("Failed to copy code: ", err);
+      });
+    }
+
+    window.switchMode = switchMode;
+    window.switchTab = switchTab;
+    window.switchResponseTab = switchResponseTab;
+    window.copyCode = copyCode;
+
+    placeCodeExplorer();
+    switchMode("request");
+    switchTab("curl");
+
+    // Sidebar highlight on scroll
+    const sections = document.querySelectorAll("section");
+    const navLinks = document.querySelectorAll("nav a");
+
+    window.addEventListener("scroll", () => {
+      let currentSection = "";
+      sections.forEach(sec => {
+        const top = sec.offsetTop;
+        if (pageYOffset >= top - 120) {
+          currentSection = sec.getAttribute("id");
+        }
+      });
+
+      navLinks.forEach(link => {
+        link.classList.remove("text-indigo-500", "font-semibold");
+        link.classList.add("text-slate-500", "font-medium");
+        if (link.getAttribute("href") === `#${currentSection}`) {
+          link.classList.remove("text-slate-500", "font-medium");
+          link.classList.add("text-indigo-500", "font-semibold");
+        }
+      });
+    });
+
+    function copySnippet(btn) {
+      const pre = btn.parentElement && btn.parentElement.querySelector("pre");
+      if (!pre) return;
+      const text = (pre.innerText || pre.textContent || "").trim();
+      navigator.clipboard.writeText(text).then(() => {
+        const label = btn.textContent;
+        btn.textContent = "Copied!";
+        showCopyToast();
+        window.setTimeout(() => { btn.textContent = label; }, 2000);
+      }).catch(err => console.error("Copy failed:", err));
+    }
+    window.copySnippet = copySnippet;
+
+    function wrapStandaloneCodeBlocks() {
+      document.querySelectorAll("main pre.code-block").forEach((pre) => {
+        if (pre.closest(".copy-snippet")) return;
+        const wrap = document.createElement("div");
+        wrap.className = "copy-snippet";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "copy-snippet-btn";
+        btn.textContent = "Copy";
+        btn.setAttribute("aria-label", "Copy code");
+        btn.addEventListener("click", () => copySnippet(btn));
+        pre.parentNode.insertBefore(wrap, pre);
+        wrap.appendChild(btn);
+        wrap.appendChild(pre);
+      });
+    }
+    wrapStandaloneCodeBlocks();
+
+    const navToggle = document.getElementById("navToggle");
+    const docsNav = document.getElementById("docs-nav");
+    const navBackdrop = document.getElementById("docs-nav-backdrop");
+    const header = document.querySelector(".docs-header");
+
+    function adjustNavPosition() {
+      if (!header || !docsNav) return;
+      if (window.matchMedia("(max-width: 1023px)").matches) {
+        const headerHeight = header.offsetHeight;
+        docsNav.style.top = `${headerHeight}px`;
+        if (navBackdrop) {
+          navBackdrop.style.top = `${headerHeight}px`;
+        }
+      } else {
+        docsNav.style.top = "";
+        if (navBackdrop) {
+          navBackdrop.style.top = "";
+        }
+      }
+    }
+
+    function closeDocsNav() {
+      if (!docsNav) return;
+      docsNav.classList.remove("docs-nav-open");
+      if (navBackdrop) navBackdrop.classList.remove("show");
+      if (navToggle) navToggle.setAttribute("aria-expanded", "false");
+    }
+
+    if (navToggle && docsNav) {
+      navToggle.addEventListener("click", () => {
+        adjustNavPosition();
+        const open = docsNav.classList.toggle("docs-nav-open");
+        if (navBackdrop) navBackdrop.classList.toggle("show", open);
+        navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+    }
+    if (navBackdrop) navBackdrop.addEventListener("click", closeDocsNav);
+    if (docsNav) {
+      docsNav.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => {
+          if (window.matchMedia("(max-width: 1023px)").matches) closeDocsNav();
+        });
+      });
+    }
+
+    window.addEventListener("resize", adjustNavPosition);
+    window.addEventListener("load", adjustNavPosition);
+    document.addEventListener("DOMContentLoaded", adjustNavPosition);
+
+  // Simple search filtering
+    const searchInput = document.getElementById("docsSearch");
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        document.querySelectorAll("main section").forEach(sec => {
+          if (!query) {
+            sec.classList.remove("hidden");
+            return;
+          }
+          const text = sec.innerText.toLowerCase();
+          sec.classList.toggle("hidden", !text.includes(query));
+        });
+      });
+    }
+  </script>
+</body>
+</html>

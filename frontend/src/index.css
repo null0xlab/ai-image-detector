@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  /* Only transition safe properties — avoids backdrop/compositing glitches */
+  html.theme-transitioning,
+  html.theme-transitioning body,
+  html.theme-transitioning .glass,
+  html.theme-transitioning .section-card,
+  html.theme-transitioning .site-header,
+  html.theme-transitioning .page-shell {
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease !important;
+  }
+
+  html.theme-transitioning .animate-fade-in {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  html.theme-transitioning .page-bg::before {
+    transition: opacity 0.2s ease;
+  }
+
+  html:not(.dark) body {
+    @apply bg-slate-50 text-slate-900;
+  }
+
+  html.dark body {
+    @apply bg-[#030712] text-slate-100;
+  }
+}
+
+@layer components {
+  .page-shell {
+    @apply min-h-screen flex flex-col bg-slate-50 text-slate-900;
+  }
+
+  html.dark .page-shell {
+    @apply bg-[#030712] text-slate-100;
+  }
+
+  .page-bg {
+    @apply pointer-events-none fixed inset-0 -z-10 overflow-hidden;
+  }
+
+  .page-bg::before {
+    content: '';
+    @apply absolute inset-0 opacity-100;
+    background: radial-gradient(
+      ellipse 80% 55% at 50% -15%,
+      rgba(99, 102, 241, 0.07),
+      transparent 70%
+    );
+  }
+
+  html.dark .page-bg::before {
+    background: radial-gradient(
+      ellipse 80% 55% at 50% -15%,
+      rgba(120, 119, 198, 0.14),
+      transparent 70%
+    );
+  }
+
+  .site-header {
+    @apply sticky top-0 z-50 border-b border-slate-200 bg-white shadow-sm;
+  }
+
+  html.dark .site-header {
+    @apply border-slate-800 bg-[#030712] shadow-none;
+  }
+
+  .section-card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  html.dark .section-card {
+    @apply border-slate-800 bg-slate-900 shadow-none;
+  }
+
+  .section-card:hover {
+    @apply shadow-md;
+  }
+
+  html.dark .section-card:hover {
+    @apply border-slate-700;
+  }
+
+  /* Solid surfaces — no backdrop-filter (prevents dark-mode compositing artifacts) */
+  .glass {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  html.dark .glass {
+    @apply border-slate-800 bg-slate-900 shadow-none;
+  }
+
+  html:not(.dark) .code-block {
+    @apply bg-slate-50 text-slate-800 border border-slate-200;
+  }
+
+  html.dark .code-block {
+    @apply bg-[#0f1419] text-slate-200 border border-slate-800;
+  }
+
+  html:not(.dark) .code-explorer {
+    @apply bg-white border border-slate-200;
+  }
+
+  html:not(.dark) .code-explorer-tabs {
+    @apply bg-slate-50 border-b border-slate-200;
+  }
+
+  html:not(.dark) .code-explorer-body {
+    @apply bg-white text-slate-800;
+  }
+
+  html.dark .code-explorer {
+    @apply bg-slate-900 border border-slate-800;
+  }
+
+  html.dark .code-explorer-tabs {
+    @apply bg-slate-950 border-b border-slate-800;
+  }
+
+  html.dark .code-explorer-body {
+    @apply bg-[#0f1419] text-slate-200;
+  }
+
+  .detector-panel {
+    @apply border-b border-slate-200 pb-10 mb-10 lg:pb-12 lg:mb-12;
+  }
+
+  html.dark .detector-panel {
+    @apply border-slate-800;
+  }
+
+  .content-sections {
+    @apply space-y-12 lg:space-y-16;
+  }
+}
+
+@layer utilities {
+  .text-glow-green {
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  }
+
+  html:not(.dark) .text-glow-green {
+    text-shadow: none;
+    @apply text-emerald-700;
+  }
+
+  .text-glow-red {
+    text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  }
+
+  html:not(.dark) .text-glow-red {
+    text-shadow: none;
+    @apply text-rose-700;
+  }
+
+  .text-glow-amber {
+    text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  }
+
+  html:not(.dark) .text-glow-amber {
+    text-shadow: none;
+    @apply text-amber-700;
+  }
+
+  .text-glow-purple {
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+  }
+
+  html:not(.dark) .text-glow-purple {
+    text-shadow: none;
+    @apply text-purple-700;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

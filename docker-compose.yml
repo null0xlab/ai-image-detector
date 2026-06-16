@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  detector-app:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ai_image_detector
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    environment:
+      - PORT=8000
+      - PYTHONUNBUFFERED=1

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Detector - Multi-Signal Forensics</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        outfit: ['Outfit', 'sans-serif'],
+                    }
+                }
+            },
+            plugins: [
+                function({ addVariant }) {
+                    addVariant('light', 'html.light &');
+                }
+            ]
+        }
+    </script>
+    <style>
+        html.light body { background-color: #f1f5f9; color: #0f172a; }
+        html.light .glass {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+        }
+        html.dark .glass, html:not(.light) .glass {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        html.light .heatmap-box { background: #e2e8f0; border-color: #cbd5e1; }
+        html.light .tag-pill { background: #f1f5f9; border-color: #e2e8f0; color: #475569; }
+        html.light .meta-grid { background: #f8fafc; border-color: #e2e8f0; }
+        html.light footer { border-color: #e2e8f0; color: #64748b; }
+        html.light .progress-track { background: #e2e8f0; }
+        .text-glow-green {
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+        .text-glow-red {
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+        .text-glow-amber {
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-[#030712] text-slate-100 font-sans min-h-screen transition-colors duration-300 light:bg-slate-100 light:text-slate-900">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))] pointer-events-none hidden dark:block"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.08),rgba(255,255,255,0))] pointer-events-none hidden light:block"></div>
+    
+    <header class="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center relative z-10">
+        <div class="flex items-center space-x-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-outfit font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-100 to-slate-300 dark:from-white dark:to-slate-300 light:text-slate-900">AI Image Detector</h1>
+                <p class="text-[10px] text-slate-400 font-semibold tracking-wider uppercase dark:text-slate-500 light:text-slate-400">Forensics Engine</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <a href="/api/guide" class="text-xs font-semibold px-4 py-2 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-indigo-600 hover:text-white text-slate-300 dark:border-slate-800 dark:bg-slate-900/50 light:bg-white light:border-slate-200 light:hover:bg-slate-100 light:text-slate-700 transition-all flex items-center space-x-1.5 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                </svg>
+                <span>API Docs</span>
+            </a>
+            
+            <button id="themeToggle" class="p-2 rounded-xl border border-slate-800 bg-slate-900/50 hover:bg-slate-900 transition-all dark:border-slate-800 dark:bg-slate-900/50 light:bg-white light:border-slate-200 light:hover:bg-slate-100">
+                <!-- Moon Icon -->
+                <svg id="moonIcon" class="w-5 h-5 text-indigo-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+                <!-- Sun Icon -->
+                <svg id="sunIcon" class="w-5 h-5 text-amber-500 hidden light:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 relative z-10">
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Side: Upload & Core controls -->
+            <div class="lg:col-span-5 flex flex-col space-y-6">
+                <div class="glass p-6 rounded-2xl shadow-xl flex flex-col space-y-6">
+                    <div>
+                        <h2 class="text-lg font-outfit font-bold dark:text-white light:text-slate-900">Upload Image</h2>
+                        <p class="text-xs text-slate-400 dark:text-slate-400 light:text-slate-500">Scan metadata, LBP texture, ELA compression, and FFT frequencies.</p>
+                    </div>
+                    
+                    <!-- Dropzone -->
+                    <div id="dropzone" class="border-2 border-dashed border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500/70 hover:bg-slate-900/10 dark:border-slate-800 dark:hover:bg-slate-950/20 light:border-slate-300 light:hover:bg-indigo-50/20 transition-all relative overflow-hidden group">
+                        <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp" class="hidden">
+                        
+                        <div id="uploadPrompt" class="text-center flex flex-col items-center space-y-4">
+                            <div class="h-12 w-12 rounded-xl bg-slate-900/60 flex items-center justify-center text-slate-400 group-hover:text-indigo-400 group-hover:scale-110 transition-all dark:bg-slate-950/80 light:bg-slate-100">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold dark:text-slate-300 light:text-slate-700">Drag & drop your image here</p>
+                                <p class="text-xs text-slate-400 mt-1 dark:text-slate-500 light:text-slate-400">or click to browse local files</p>
+                            </div>
+                            <span class="inline-block px-2.5 py-1 text-[9px] font-bold text-slate-400 bg-slate-900 rounded dark:bg-slate-950 dark:text-slate-500 light:bg-slate-100">JPG, PNG, WEBP — Max 10MB</span>
+                        </div>
+                        
+                        <!-- Image Preview Container -->
+                        <div id="previewContainer" class="hidden w-full h-full flex flex-col items-center relative">
+                            <img id="imagePreview" class="max-h-72 w-full object-contain rounded-lg shadow-md" src="" alt="Preview">
+                            <button id="clearBtn" class="absolute top-2 right-2 p-1.5 rounded-lg bg-slate-950/80 text-slate-400 hover:text-white transition-all shadow-md">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Analyze Button -->
+                    <button id="analyzeBtn" disabled class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-semibold text-white shadow-lg shadow-indigo-500/20 hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center space-x-2">
+                        <span>Analyze Image</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Info Guide Card -->
+                <div class="glass p-6 rounded-2xl shadow-xl space-y-4">
+                    <h3 class="text-sm font-outfit font-bold dark:text-white light:text-slate-900">Dynamic Scoring Robustness</h3>
+                    <p class="text-xs leading-relaxed text-slate-400 dark:text-slate-400 light:text-slate-500">
+                        Images sent over platforms like <strong>WhatsApp, Telegram, or Messenger</strong> lose their EXIF metadata and gain high compression noise.
+                    </p>
+                    <p class="text-xs leading-relaxed text-slate-400 dark:text-slate-400 light:text-slate-500">
+                        Our engine automatically estimates compression levels. When compression is detected, it <strong>dynamically weights frequency (FFT) and statistical texture signals higher</strong>, yielding extremely robust results where other detectors fail.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Right Side: Loading and Results Display -->
+            <div class="lg:col-span-7 flex flex-col space-y-6">
+                
+                <!-- State: Empty / Waiting -->
+                <div id="stateEmpty" class="glass rounded-2xl shadow-xl p-16 flex flex-col items-center justify-center text-center space-y-4 h-full min-h-[400px]">
+                    <div class="h-16 w-16 rounded-full bg-slate-900/50 flex items-center justify-center text-slate-500 border border-slate-800 dark:bg-slate-950/80 light:bg-slate-100 light:border-slate-200">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-outfit font-bold dark:text-slate-200 light:text-slate-700">No Image Analyzed</h3>
+                        <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto dark:text-slate-500 light:text-slate-400">Upload a JPG, PNG, or WEBP file and click "Analyze Image" to start the forensic detection engine.</p>
+                    </div>
+                </div>
+                
+                <!-- State: Loading -->
+                <div id="stateLoading" class="hidden glass rounded-2xl shadow-xl p-16 flex flex-col items-center justify-center text-center space-y-6 h-full min-h-[400px]">
+                    <!-- Spinning Neon Ring -->
+                    <div class="relative w-20 h-20">
+                        <div class="absolute inset-0 rounded-full border-4 border-slate-900 dark:border-slate-950"></div>
+                        <div class="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-purple-500 animate-spin"></div>
+                        <div class="absolute inset-2 rounded-full border-4 border-slate-900 border-b-pink-500 animate-spin duration-1000 dark:border-slate-950"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-outfit font-bold dark:text-slate-200 light:text-slate-700">Running Forensics</h3>
+                        <p class="text-xs text-slate-400 mt-2 max-w-sm mx-auto dark:text-slate-500 light:text-slate-400" id="loadingStatus">Scanning metadata tags...</p>
+                    </div>
+                    <div class="w-48 progress-track bg-slate-900 dark:bg-slate-950 light:bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-1.5 w-1/3 rounded-full animate-[pulse_1.5s_infinite] transition-all duration-500" id="loadingProgress"></div>
+                    </div>
+                </div>
+                
+                <!-- State: Result -->
+                <div id="stateResult" class="hidden flex flex-col space-y-6">
+                    
+                    <!-- Verdict Card -->
+                    <div class="glass p-6 rounded-2xl shadow-xl grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                        <!-- Left: Circular Gauge -->
+                        <div class="md:col-span-5 flex flex-col items-center justify-center py-2">
+                            <div class="relative w-40 h-40">
+                                <!-- Background circle -->
+                                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="8" fill="transparent" class="text-slate-900 dark:text-slate-950 light:text-slate-200" />
+                                    <!-- Progress ring -->
+                                    <circle id="gaugeRing" cx="50" cy="50" r="42" stroke="url(#gaugeGradient)" stroke-width="8" fill="transparent" 
+                                            stroke-dasharray="263.89" stroke-dashoffset="263.89" stroke-linecap="round" class="transition-all duration-1000 ease-out" />
+                                    
+                                    <!-- Defs for colorful neon gradients -->
+                                    <defs>
+                                        <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop id="gradStop1" offset="0%" stop-color="#10b981" />
+                                            <stop id="gradStop2" offset="100%" stop-color="#14b8a6" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <!-- Score Centered Text -->
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-4xl font-outfit font-extrabold tracking-tight" id="scoreText">0%</span>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider dark:text-slate-500">Confidence</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right: Verdict Info -->
+                        <div class="md:col-span-7 flex flex-col space-y-3 text-center md:text-left">
+                            <span class="inline-flex self-center md:self-start px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm" id="verdictBadge">
+                                Likely Real Photo
+                            </span>
+                            <h3 class="text-xl font-outfit font-extrabold dark:text-white light:text-slate-900" id="verdictTitle">Authentic Image</h3>
+                            <p class="text-xs leading-relaxed text-slate-400 dark:text-slate-400 light:text-slate-500" id="verdictExplanation">
+                                No significant anomalies detected. Visual structures, compression, and Fourier frequencies represent normal photo sensor physics.
+                            </p>
+                            
+                            <div class="flex items-center space-x-4 pt-2 justify-center md:justify-start">
+                                <span class="tag-pill text-[10px] bg-slate-900 px-2 py-1 rounded text-slate-400 border border-slate-800 dark:bg-slate-950 dark:text-slate-500 dark:border-slate-900 light:bg-slate-100 light:text-slate-600 light:border-slate-200" id="compressionModeText">Standard Mode</span>
+                                <span class="tag-pill text-[10px] bg-slate-900 px-2 py-1 rounded text-slate-400 border border-slate-800 dark:bg-slate-950 dark:text-slate-500 dark:border-slate-900 light:bg-slate-100 light:text-slate-600 light:border-slate-200" id="qualityEstText">Quality Factor: 85</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Side-by-side Visual Heatmap & FFT Display -->
+                    <div class="glass p-6 rounded-2xl shadow-xl flex flex-col space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-sm font-outfit font-bold dark:text-white light:text-slate-900">Interactive Heatmap & Fourier Spectrum</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[11px] text-slate-400 dark:text-slate-500">Overlay Opacity:</span>
+                                <input type="range" id="heatmapOpacity" min="0" max="100" value="45" class="w-24 h-1 bg-slate-850 rounded-lg appearance-none cursor-pointer accent-indigo-500 dark:bg-slate-950">
+                                <span id="opacityPct" class="text-[11px] font-bold text-indigo-400 w-8">45%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Overlay Heatmap canvas view -->
+                            <div class="flex flex-col space-y-2">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Suspicious Regions Heatmap</span>
+                                <div class="heatmap-box relative border border-slate-900 rounded-xl overflow-hidden bg-slate-950 aspect-square flex items-center justify-center dark:border-slate-900 light:bg-slate-200 light:border-slate-300">
+                                    <!-- Base Layer (Original Image) -->
+                                    <img id="heatmapBaseImg" class="max-h-full max-w-full object-contain absolute" src="" alt="Base Image">
+                                    <!-- Heatmap Layer (Overlay Image) -->
+                                    <img id="heatmapOverlayImg" class="max-h-full max-w-full object-contain absolute mix-blend-normal pointer-events-none transition-opacity duration-200" style="opacity: 0.45;" src="" alt="Heatmap">
+                                </div>
+                                <span class="text-[9px] text-slate-500 leading-normal">Highlighted glowing zones indicate spatial anomalies: excessive local smoothness (synthetic skin), depth edge cutoffs (synthetic bokeh), hand anomalies, or LBP irregularities.</span>
+                            </div>
+                            
+                            <!-- Fourier FFT Spectrum view -->
+                            <div class="flex flex-col space-y-2">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Fourier Magnitude Spectrum (FFT)</span>
+                                <div class="heatmap-box relative border border-slate-900 rounded-xl overflow-hidden bg-slate-950 aspect-square flex items-center justify-center dark:border-slate-900 light:bg-slate-200 light:border-slate-300">
+                                    <img id="fftImg" class="max-h-full max-w-full object-contain" src="" alt="Fourier Spectrum">
+                                </div>
+                                <span class="text-[9px] text-slate-500 leading-normal">The logarithmic 2D fast Fourier transform. AI-generated images (especially GANs) display symmetrical grid spikes/stars, representing interpolation and resampling anomalies in high frequency bands.</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Signal breakdowns Accordion -->
+                    <div class="glass p-6 rounded-2xl shadow-xl flex flex-col space-y-4">
+                        <h3 class="text-sm font-outfit font-bold dark:text-white light:text-slate-900">Multi-Signal Diagnostics</h3>
+                        <div class="flex flex-col space-y-3" id="signalsAccordion">
+                            <!-- Accordion Items will be injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+        </div>
+    </main>
+
+    <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-xs text-slate-500 mt-12 border-t border-slate-900 dark:border-slate-900 light:border-slate-200 light:text-slate-500">
+        <p>AI Image Detector · <a href="/docs" class="underline text-indigo-400 light:text-indigo-600">Swagger</a></p>
+        <p class="mt-2">Copyrighted <a href="https://github.com/null0xlab" target="_blank" rel="noopener noreferrer" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors font-medium">null0xlab</a></p>
+    </footer>
+
+    <!-- Script logic -->
+    <script>
+        const stateEmpty = document.getElementById("stateEmpty");
+        const stateLoading = document.getElementById("stateLoading");
+        const stateResult = document.getElementById("stateResult");
+        
+        const dropzone = document.getElementById("dropzone");
+        const fileInput = document.getElementById("fileInput");
+        const uploadPrompt = document.getElementById("uploadPrompt");
+        const previewContainer = document.getElementById("previewContainer");
+        const imagePreview = document.getElementById("imagePreview");
+        const clearBtn = document.getElementById("clearBtn");
+        
+        const analyzeBtn = document.getElementById("analyzeBtn");
+        const loadingStatus = document.getElementById("loadingStatus");
+        const loadingProgress = document.getElementById("loadingProgress");
+        
+        const gaugeRing = document.getElementById("gaugeRing");
+        const gradStop1 = document.getElementById("gradStop1");
+        const gradStop2 = document.getElementById("gradStop2");
+        const scoreText = document.getElementById("scoreText");
+        const verdictBadge = document.getElementById("verdictBadge");
+        const verdictTitle = document.getElementById("verdictTitle");
+        const verdictExplanation = document.getElementById("verdictExplanation");
+        
+        const compressionModeText = document.getElementById("compressionModeText");
+        const qualityEstText = document.getElementById("qualityEstText");
+        
+        const heatmapOpacity = document.getElementById("heatmapOpacity");
+        const opacityPct = document.getElementById("opacityPct");
+        const heatmapBaseImg = document.getElementById("heatmapBaseImg");
+        const heatmapOverlayImg = document.getElementById("heatmapOverlayImg");
+        const fftImg = document.getElementById("fftImg");
+        const signalsAccordion = document.getElementById("signalsAccordion");
+        
+        let selectedFile = null;
+        
+        // Theme Switcher (dark <-> light)
+        const themeToggle = document.getElementById("themeToggle");
+        const htmlEl = document.documentElement;
+        const THEME_KEY = "ai-detector-theme";
+        const legacyTheme = localStorage.getItem("theme");
+        const savedTheme = localStorage.getItem(THEME_KEY) || legacyTheme;
+        if (savedTheme === "light") {
+            htmlEl.classList.remove("dark");
+            htmlEl.classList.add("light");
+        }
+        themeToggle.addEventListener("click", () => {
+            const goingLight = htmlEl.classList.contains("dark");
+            if (goingLight) {
+                htmlEl.classList.remove("dark");
+                htmlEl.classList.add("light");
+                localStorage.setItem(THEME_KEY, "light");
+            } else {
+                htmlEl.classList.remove("light");
+                htmlEl.classList.add("dark");
+                localStorage.setItem(THEME_KEY, "dark");
+            }
+        });
+        
+        // Heatmap Opacity
+        heatmapOpacity.addEventListener("input", (e) => {
+            const opacity = e.target.value;
+            opacityPct.textContent = `${opacity}%`;
+            heatmapOverlayImg.style.opacity = opacity / 100;
+        });
+        
+        // File Drag & Drop
+        dropzone.addEventListener("click", () => {
+            if (!selectedFile) fileInput.click();
+        });
+        
+        fileInput.addEventListener("change", (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        dropzone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropzone.classList.add("border-indigo-500");
+        });
+        
+        dropzone.addEventListener("dragleave", () => {
+            dropzone.classList.remove("border-indigo-500");
+        });
+        
+        dropzone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropzone.classList.remove("border-indigo-500");
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        
+        clearBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            resetUpload();
+        });
+        
+        function handleFile(file) {
+            // Validate size & extension
+            const validTypes = ["image/jpeg", "image/png", "image/webp"];
+            if (!validTypes.includes(file.type)) {
+                alert("Only JPG, JPEG, PNG, or WEBP images are supported.");
+                return;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                alert("File size exceeds 10MB limit.");
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                heatmapBaseImg.src = e.target.result;
+                uploadPrompt.classList.add("hidden");
+                previewContainer.classList.remove("hidden");
+                analyzeBtn.disabled = false;
+            }
+            reader.readAsDataURL(file);
+        }
+        
+        function resetUpload() {
+            selectedFile = null;
+            fileInput.value = "";
+            imagePreview.src = "";
+            heatmapBaseImg.src = "";
+            heatmapOverlayImg.src = "";
+            fftImg.src = "";
+            uploadPrompt.classList.remove("hidden");
+            previewContainer.classList.add("hidden");
+            analyzeBtn.disabled = true;
+            
+            stateEmpty.classList.remove("hidden");
+            stateLoading.classList.add("hidden");
+            stateResult.classList.add("hidden");
+        }
+        
+        // Mock loading step names to show progress updates
+        const loadingSteps = [
+            { text: "Scanning EXIF metadata tags...", progress: "w-1/6" },
+            { text: "Computing 2D Fast Fourier Transform...", progress: "w-2/6" },
+            { text: "Calculating GLCM and LBP micro-textures...", progress: "w-3/6" },
+            { text: "Running Error Level Analysis (ELA)...", progress: "w-4/6" },
+            { text: "Assessing visual edge boundaries...", progress: "w-5/6" },
+            { text: "Synthesizing forensic fusion weights...", progress: "w-full" }
+        ];
+        
+        // Analyze Action
+        analyzeBtn.addEventListener("click", async () => {
+            if (!selectedFile) return;
+            
+            // Transition to loading state
+            stateEmpty.classList.add("hidden");
+            stateResult.classList.add("hidden");
+            stateLoading.classList.remove("hidden");
+            
+            // Animate loading text
+            let stepIdx = 0;
+            const loadingInterval = setInterval(() => {
+                if (stepIdx < loadingSteps.length) {
+                    loadingStatus.textContent = loadingSteps[stepIdx].text;
+                    loadingProgress.className = `bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-1.5 ${loadingSteps[stepIdx].progress} rounded-full transition-all duration-300`;
+                    stepIdx++;
+                }
+            }, 600);
+            
+            try {
+                const formData = new FormData();
+                formData.append("file", selectedFile);
+                
+                const response = await fetch("/api/analyze", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                clearInterval(loadingInterval);
+                
+                if (!response.ok) {
+                    const text = await response.text();
+                    let errMsg = "API failed during analysis.";
+                    try {
+                        const err = JSON.parse(text);
+                        errMsg = err.detail || errMsg;
+                        if (Array.isArray(errMsg)) errMsg = errMsg.map(e => e.msg || e).join(", ");
+                    } catch {
+                        if (text) errMsg = text.slice(0, 200);
+                    }
+                    throw new Error(errMsg);
+                }
+                
+                const data = await response.json();
+                renderResult(data);
+                
+            } catch (err) {
+                clearInterval(loadingInterval);
+                alert(`Error: ${err.message}`);
+                stateLoading.classList.add("hidden");
+                stateEmpty.classList.remove("hidden");
+            }
+        });
+        
+        function renderResult(data) {
+            stateLoading.classList.add("hidden");
+            stateResult.classList.remove("hidden");
+            
+            // 1. Setup Circular Progress Gauge
+            const score = data.confidence;
+            scoreText.textContent = `${score}%`;
+            
+            // SVG Circumference = 2 * PI * R (R=42) = ~263.89
+            const circumference = 263.89;
+            const offset = circumference - (score / 100) * circumference;
+            gaugeRing.style.strokeDashoffset = offset;
+            
+            // Dynamic Gauge color based on rating
+            if (score <= 30) {
+                // Real: Emerald/Teal gradient
+                gradStop1.setAttribute("stop-color", "#10b981");
+                gradStop2.setAttribute("stop-color", "#14b8a6");
+                verdictBadge.className = "inline-flex self-center md:self-start px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-glow-green shadow-sm";
+                verdictTitle.className = "text-xl font-outfit font-extrabold text-emerald-400 text-glow-green text-center md:text-left";
+            } else if (score <= 60) {
+                // Uncertain: Amber gradient
+                gradStop1.setAttribute("stop-color", "#f59e0b");
+                gradStop2.setAttribute("stop-color", "#d97706");
+                verdictBadge.className = "inline-flex self-center md:self-start px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 text-glow-amber shadow-sm";
+                verdictTitle.className = "text-xl font-outfit font-extrabold text-amber-400 text-glow-amber text-center md:text-left";
+            } else {
+                // AI: Rose/Red gradient
+                gradStop1.setAttribute("stop-color", "#ef4444");
+                gradStop2.setAttribute("stop-color", "#dc2626");
+                verdictBadge.className = "inline-flex self-center md:self-start px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500/10 text-rose-400 border border-rose-500/20 text-glow-red shadow-sm";
+                verdictTitle.className = "text-xl font-outfit font-extrabold text-rose-400 text-glow-red text-center md:text-left";
+            }
+            
+            // 2. Verdict Text
+            verdictBadge.textContent = data.verdict;
+            verdictTitle.textContent = data.is_ai_generated ? "AI-Generated Image" : (score <= 30 ? "Authentic Camera Photo" : "Uncertain Image Structure");
+            verdictExplanation.textContent = data.explanation;
+            
+            // 3. Compression details
+            const cDetails = data.compression_details;
+            const modeLabels = {
+                pristine_digital: "AI Export Mode",
+                web_photo: "Web Photo Mode",
+                messaging_compressed: "Compressed Mode",
+                standard: "Standard Mode"
+            };
+            compressionModeText.textContent = modeLabels[cDetails.analysis_mode] || "Standard Mode";
+            qualityEstText.textContent = `Quality Factor: ${cDetails.estimated_quality}`;
+            
+            // 4. Overlays
+            heatmapOverlayImg.src = data.heatmap_base64;
+            fftImg.src = data.fft_base64;
+            
+            // Reset opacity to default slider value
+            const opacityVal = heatmapOpacity.value;
+            heatmapOverlayImg.style.opacity = opacityVal / 100;
+            
+            // 5. Build Expandable Accordion
+            signalsAccordion.innerHTML = "";
+            
+            const signalList = [
+                { id: "metadata", name: "A. Metadata Analysis", data: data.signals.metadata, weight: cDetails.dynamic_weights.metadata, icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>` },
+                { id: "generative", name: "B. Generative Export Analysis", data: data.signals.generative, weight: cDetails.dynamic_weights.generative, icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>` },
+                { id: "frequency", name: "C. Frequency Domain Analysis (FFT)", data: data.signals.frequency, weight: cDetails.dynamic_weights.frequency, icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>` },
+                { id: "texture", name: "D. Texture & Microstructure (LBP)", data: data.signals.texture, weight: cDetails.dynamic_weights.texture, icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2zm0 8a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2z"></path></svg>` },
+                { id: "compression", name: "E. Compression Artifacts (ELA & DCT)", data: data.signals.compression, weight: cDetails.dynamic_weights.compression, icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>` },
+                { id: "visual", name: "F. Visual Artifact Detection", data: data.signals.visual, weight: cDetails.dynamic_weights.visual, icon: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>` }
+            ];
+            
+            signalList.forEach((sig) => {
+                const isMeta = sig.id === "metadata";
+                let extraHtml = "";
+                
+                // If EXIF metadata contains specific fields, display them nicely
+                if (isMeta && sig.data.tags && Object.keys(sig.data.tags).length > 0) {
+                    const tags = sig.data.tags;
+                    extraHtml = `
+                        <div class="meta-grid mt-2.5 p-3 rounded-lg bg-slate-950/70 border border-slate-900 grid grid-cols-2 md:grid-cols-3 gap-2 text-[10px] text-slate-400 dark:bg-slate-950/90 dark:border-slate-900 light:bg-slate-50 light:border-slate-200 light:text-slate-600">
+                            ${tags.make ? `<div><span class="font-bold text-slate-500 dark:text-slate-600 block">Manufacturer</span><span class="font-medium text-slate-300 dark:text-slate-400">${tags.make}</span></div>` : ""}
+                            ${tags.model ? `<div><span class="font-bold text-slate-500 dark:text-slate-600 block">Device Model</span><span class="font-medium text-slate-300 dark:text-slate-400">${tags.model}</span></div>` : ""}
+                            ${tags.software ? `<div><span class="font-bold text-slate-500 dark:text-slate-600 block">Software/Origin</span><span class="font-medium text-slate-300 dark:text-slate-400 truncate block">${tags.software}</span></div>` : ""}
+                            ${tags.f_number ? `<div><span class="font-bold text-slate-500 dark:text-slate-600 block">Aperture</span><span class="font-medium text-slate-300 dark:text-slate-400">${tags.f_number}</span></div>` : ""}
+                            ${tags.exposure_time ? `<div><span class="font-bold text-slate-500 dark:text-slate-600 block">Exposure</span><span class="font-medium text-slate-300 dark:text-slate-400">${tags.exposure_time}s</span></div>` : ""}
+                            ${tags.iso ? `<div><span class="font-bold text-slate-500 dark:text-slate-600 block">ISO Rating</span><span class="font-medium text-slate-300 dark:text-slate-400">${tags.iso}</span></div>` : ""}
+                            ${tags.datetime ? `<div><span class="font-bold text-slate-500 dark:text-slate-600 block">Capture Date</span><span class="font-medium text-slate-300 dark:text-slate-400 truncate block">${tags.datetime}</span></div>` : ""}
+                            ${tags.has_gps ? `<div><span class="font-bold text-slate-500 dark:text-slate-600 block">GPS Coordinates</span><span class="font-medium text-slate-300 dark:text-slate-400 text-emerald-400">Embedded</span></div>` : ""}
+                            ${tags.ai_signature ? `<div class="col-span-full border-t border-rose-950/40 pt-2"><span class="font-bold text-rose-500 block">AI Software Tool Tag</span><span class="font-mono text-rose-400 block break-all text-[9px] bg-rose-500/10 p-1.5 rounded mt-1">${tags.ai_signature}</span></div>` : ""}
+                        </div>
+                    `;
+                }
+                
+                // Color mapping for accordion bar
+                let barColor = "bg-emerald-500";
+                let badgeClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                if (sig.data.score > 30 && sig.data.score <= 60) {
+                    barColor = "bg-amber-500";
+                    badgeClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                } else if (sig.data.score > 60) {
+                    barColor = "bg-rose-500";
+                    badgeClass = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+                }
+                
+                const item = document.createElement("div");
+                item.className = "border border-slate-800 rounded-xl overflow-hidden bg-slate-900/30 dark:border-slate-850 dark:bg-slate-900/20 light:bg-white light:border-slate-200";
+                item.innerHTML = `
+                    <button class="w-full px-5 py-4 flex items-center justify-between text-left transition-all hover:bg-slate-900/60 dark:hover:bg-slate-900/40 light:hover:bg-slate-50 accordion-btn">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-slate-400">${sig.icon}</span>
+                            <span class="text-xs font-semibold text-slate-200 dark:text-slate-300 light:text-slate-700">${sig.name}</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider">Weight: ${Math.round(sig.weight * 100)}%</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeClass}">${sig.data.score}%</span>
+                            <svg class="w-4 h-4 text-slate-400 transform transition-transform duration-300 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </button>
+                    
+                    <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out border-t border-transparent accordion-content">
+                        <div class="p-5 flex flex-col space-y-3">
+                            <!-- Mini bar -->
+                            <div class="flex items-center space-x-3">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase w-20 dark:text-slate-500">Anomaly Index:</span>
+                                <div class="flex-1 progress-track bg-slate-950 dark:bg-slate-950/60 light:bg-slate-200 rounded-full h-2 overflow-hidden">
+                                    <div class="${barColor} h-2 rounded-full" style="width: ${sig.data.score}%;"></div>
+                                </div>
+                            </div>
+                            <!-- Explanatory note -->
+                            <p class="text-xs text-slate-400 leading-relaxed dark:text-slate-400 light:text-slate-500">
+                                <strong>Assessment:</strong> ${sig.data.details}
+                            </p>
+                            ${extraHtml}
+                        </div>
+                    </div>
+                `;
+                
+                signalsAccordion.appendChild(item);
+            });
+            
+            // Attach Accordion Toggle Click Listeners
+            const btns = signalsAccordion.querySelectorAll(".accordion-btn");
+            btns.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const item = btn.parentElement;
+                    const content = item.querySelector(".accordion-content");
+                    const chevron = item.querySelector(".chevron");
+                    const isOpen = !content.style.maxHeight || content.style.maxHeight === "0px";
+                    
+                    // Close others
+                    signalsAccordion.querySelectorAll(".accordion-content").forEach((c) => {
+                        c.style.maxHeight = "0px";
+                        c.parentElement.querySelector(".chevron").classList.remove("rotate-180");
+                        c.parentElement.classList.remove("border-indigo-500/20");
+                    });
+                    
+                    if (isOpen) {
+                        content.style.maxHeight = `${content.scrollHeight}px`;
+                        chevron.classList.add("rotate-180");
+                        item.classList.add("border-indigo-500/20");
+                    } else {
+                        content.style.maxHeight = "0px";
+                        chevron.classList.remove("rotate-180");
+                        item.classList.remove("border-indigo-500/20");
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
